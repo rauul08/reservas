@@ -6,15 +6,20 @@ namespace App\Reservations\Infrastructure\Controllers;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 use App\Reservations\Application\UseCases\CreateReservation;
+use App\Reservations\Infrastructure\Mappers\ReservationApiMapper;
 
 class CreateReservationController
 {
     /** @var CreateReservation */
     protected $useCase;
 
-    public function __construct(CreateReservation $useCase)
+    /** @var ReservationApiMapper */
+    protected $apiMapper;
+
+    public function __construct(CreateReservation $useCase, ReservationApiMapper $apiMapper)
     {
         $this->useCase = $useCase;
+        $this->apiMapper = $apiMapper;
     }
 
     public function __invoke(Request $request, Response $response, array $args): Response
@@ -53,7 +58,8 @@ class CreateReservationController
         try {
             $reservation = $this->useCase->execute($data);
 
-            $payload = json_encode(['id' => $reservation->getId()]);
+            // Map to API DTO and return full object
+            $payload = json_encode($this->apiMapper->toArray($reservation));
             $response->getBody()->write($payload);
 
             return $response->withHeader('Content-Type', 'application/json')->withStatus(201);

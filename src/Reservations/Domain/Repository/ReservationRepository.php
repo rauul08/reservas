@@ -21,10 +21,20 @@ interface ReservationRepository
     public function findById(int $id);
 
     /**
-     * Return all reservations
+     * Return reservations matching criteria with pagination
+     * @param array|null $criteria Supported keys: user_id, room_id, status, from, to
+     * @param int $limit
+     * @param int $offset
      * @return Reservation[]
      */
-    public function findAll(): array;
+    public function findAll(?array $criteria = null, int $limit = 10, int $offset = 0): array;
+
+    /**
+     * Return total count matching criteria (for pagination)
+     * @param array|null $criteria
+     * @return int
+     */
+    public function countByCriteria(?array $criteria = null): int;
 
     /**
      * Check if a room has any reservation overlapping the given range.

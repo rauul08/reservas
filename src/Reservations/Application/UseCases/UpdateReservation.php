@@ -30,7 +30,7 @@ class UpdateReservation
      * @param string $checkOut
      * @return Reservation
      */
-    public function execute(int $id, string $checkIn, string $checkOut): Reservation
+    public function execute(int $id, string $checkIn, string $checkOut, ?int $roomId = null): Reservation
     {
         $existing = $this->repository->findById($id);
         if ($existing === null) {
@@ -48,16 +48,18 @@ class UpdateReservation
             throw new \InvalidArgumentException('check_out must be greater than check_in');
         }
 
+        // Determine which room to check: optional new room_id provided, otherwise keep existing
+        $targetRoomId = $roomId ?? $existing->getRoomId();
+
         // Check room availability excluding current reservation id
-        $roomId = $existing->getRoomId();
-        if ($this->repository->existsOverlappingReservation($roomId, $ci->toString(), $co->toString(), $id)) {
+        if ($this->repository->existsOverlappingReservation($targetRoomId, $ci->toString(), $co->toString(), $id)) {
             throw new \InvalidArgumentException('Room is occupied in the requested date range');
         }
 
         // Recalculate total price based on room price and number of nights
-        $room = $this->rooms->findById($roomId);
+        $room = $this->rooms->findById($targetRoomId);
         if ($room === null) {
-            throw new \InvalidArgumentException(sprintf('Room with id "%d" not found', $roomId));
+            throw new \InvalidArgumentException(sprintf('Room with id "%d" not found', $targetRoomId));
         }
 
         $nights = max(1, (int) $co->toDateTime()->diff($ci->toDateTime())->days);
@@ -70,7 +72,7 @@ class UpdateReservation
             $ci,
             $co,
             $existing->getUserId(),
-            $existing->getRoomId(),
+            $targetRoomId,
             $newTotal,
             $existing->getStatus(),
             $existing->getCreatedAt()

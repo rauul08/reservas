@@ -56,7 +56,9 @@ class UpdateReservationController
         }
 
         try {
-            $updated = $this->useCase->execute($id, $data['check_in'], $data['check_out']);
+            $roomId = isset($data['room_id']) ? (int) $data['room_id'] : null;
+
+            $updated = $this->useCase->execute($id, $data['check_in'], $data['check_out'], $roomId);
 
             $payload = $this->apiMapper->toArray($updated);
 

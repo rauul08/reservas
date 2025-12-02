@@ -79,9 +79,59 @@ class MySQLReservationRepository implements ReservationRepository
         $stmt->execute(['id' => $id]);
     }
 
-    public function findAll(): array
+    public function findAll(?array $criteria = null, int $limit = 10, int $offset = 0): array
     {
-        $stmt = $this->pdo->query('SELECT * FROM reservations ORDER BY id ASC');
+        $where = [];
+        $params = [];
+
+        if (!empty($criteria['user_id'])) {
+            $where[] = 'user_id = :user_id';
+            $params['user_id'] = (int) $criteria['user_id'];
+        }
+
+        if (!empty($criteria['room_id'])) {
+            $where[] = 'room_id = :room_id';
+            $params['room_id'] = (int) $criteria['room_id'];
+        }
+
+        if (!empty($criteria['status'])) {
+            $where[] = 'status = :status';
+            $params['status'] = $criteria['status'];
+        }
+
+        // Date range filtering: if both from/to provided, return reservations that overlap the range
+        if (!empty($criteria['from']) && !empty($criteria['to'])) {
+            $where[] = 'NOT (check_out < :from OR check_in > :to)';
+            $params['from'] = $criteria['from'];
+            $params['to'] = $criteria['to'];
+        } else {
+            if (!empty($criteria['from'])) {
+                $where[] = 'check_out >= :from';
+                $params['from'] = $criteria['from'];
+            }
+            if (!empty($criteria['to'])) {
+                $where[] = 'check_in <= :to';
+                $params['to'] = $criteria['to'];
+            }
+        }
+
+        $sql = 'SELECT * FROM reservations';
+        if (!empty($where)) {
+            $sql .= ' WHERE ' . implode(' AND ', $where);
+        }
+
+        $sql .= ' ORDER BY id ASC LIMIT :limit OFFSET :offset';
+
+        $stmt = $this->pdo->prepare($sql);
+
+        // Bind params
+        foreach ($params as $k => $v) {
+            $stmt->bindValue(':' . $k, $v);
+        }
+        $stmt->bindValue(':limit', (int) $limit, \PDO::PARAM_INT);
+        $stmt->bindValue(':offset', (int) $offset, \PDO::PARAM_INT);
+
+        $stmt->execute();
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
         $list = [];
@@ -112,5 +162,54 @@ class MySQLReservationRepository implements ReservationRepository
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
 
         return ((int) ($row['cnt'] ?? 0)) > 0;
+    }
+
+    public function countByCriteria(?array $criteria = null): int
+    {
+        $where = [];
+        $params = [];
+
+        if (!empty($criteria['user_id'])) {
+            $where[] = 'user_id = :user_id';
+            $params['user_id'] = (int) $criteria['user_id'];
+        }
+
+        if (!empty($criteria['room_id'])) {
+            $where[] = 'room_id = :room_id';
+            $params['room_id'] = (int) $criteria['room_id'];
+        }
+
+        if (!empty($criteria['status'])) {
+            $where[] = 'status = :status';
+            $params['status'] = $criteria['status'];
+        }
+
+        if (!empty($criteria['from']) && !empty($criteria['to'])) {
+            $where[] = 'NOT (check_out < :from OR check_in > :to)';
+            $params['from'] = $criteria['from'];
+            $params['to'] = $criteria['to'];
+        } else {
+            if (!empty($criteria['from'])) {
+                $where[] = 'check_out >= :from';
+                $params['from'] = $criteria['from'];
+            }
+            if (!empty($criteria['to'])) {
+                $where[] = 'check_in <= :to';
+                $params['to'] = $criteria['to'];
+            }
+        }
+
+        $sql = 'SELECT COUNT(*) as cnt FROM reservations';
+        if (!empty($where)) {
+            $sql .= ' WHERE ' . implode(' AND ', $where);
+        }
+
+        $stmt = $this->pdo->prepare($sql);
+        foreach ($params as $k => $v) {
+            $stmt->bindValue(':' . $k, $v);
+        }
+        $stmt->execute();
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+        return (int) ($row['cnt'] ?? 0);
     }
 }
