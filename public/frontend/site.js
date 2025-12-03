@@ -35,38 +35,322 @@ function setDefaultDates() {
   }
 }
 
-function searchRooms() {
-  const checkin = document.getElementById('checkin')?.value;
-  const checkout = document.getElementById('checkout')?.value;
-  if (!checkin || !checkout) {
-    alert('Por favor selecciona las fechas de entrada y salida');
-    return;
-  }
-  if (new Date(checkin) >= new Date(checkout)) {
-    alert('La fecha de salida debe ser posterior a la fecha de entrada');
-    return;
-  }
-
-  // If backend rooms service is available, we can call it (non-blocking)
+async function populateDestinations() {
   try {
-    // Example: roomsSvc.listRooms could accept date filters if backend supports them
-    if (roomsSvc && typeof roomsSvc.listRooms === 'function') {
-      roomsSvc.listRooms({ from: new Date(checkin).toISOString(), to: new Date(checkout).toISOString() })
-        .then(resp => {
-          console.info('roomsSvc.listRooms', resp);
-          alert('Se obtuvo ' + (resp?.data?.length ?? '0') + ' habitaciones (ver consola).');
-        }).catch(err => {
-          console.debug('roomsSvc.listRooms error', err);
-          // fallback UX: original behaviour
-          alert('Buscando habitaciones disponibles...\nCheck-in: ' + checkin + '\nCheck-out: ' + checkout);
-        });
+    // fetch rooms and derive distinct destinations
+    const resp = await roomsSvc.listRooms({ per_page: 200 });
+    const rooms = (resp && resp.data) ? resp.data : [];
+    const set = new Set();
+    rooms.forEach(r => {
+      if (r.destination) set.add(r.destination);
+    });
+    const dests = Array.from(set);
+    const sel = document.getElementById('destination');
+    if (!sel) return;
+    sel.innerHTML = '';
+    const allOpt = document.createElement('option');
+    allOpt.value = '';
+    allOpt.textContent = 'Seleccione destino';
+    sel.appendChild(allOpt);
+    dests.forEach(d => {
+      const o = document.createElement('option');
+      o.value = d;
+      o.textContent = d;
+      sel.appendChild(o);
+    });
+  } catch (e) {
+    console.debug('populateDestinations error', e);
+  }
+}
+
+async function isRoomAvailable(roomId, fromIso, toIso) {
+  try {
+    const resp = await reservationsSvc.listReservations({ room_id: roomId, from: fromIso, to: toIso, per_page: 1 });
+    // resp.meta.total indicates overlapping reservations
+    const total = resp && resp.meta ? resp.meta.total : (resp && resp.data ? resp.data.length : 0);
+    return (Number(total) === 0);
+  } catch (e) {
+    console.debug('isRoomAvailable error', e);
+    // be conservative: treat as unavailable on error
+    return false;
+  }
+}
+
+let cachedCategories = [];
+let originalRoomsHTML = null;
+
+async function loadRooms(category = null) {
+  try {
+    // request available rooms from backend; when category is provided, pass it
+    const params = { status: 'available', per_page: 100 };
+    if (category && category !== 'all') params.category = category;
+    const resp = await roomsSvc.listRooms(params);
+    const rooms = (resp && resp.data) ? resp.data : [];
+
+    // On the initial full load (no category filter) derive categories from returned rooms
+    if (!category) {
+      const set = new Set();
+      rooms.forEach(r => {
+        if (r.category) set.add(r.category);
+        else if (r.subtype) set.add(r.subtype);
+      });
+      cachedCategories = Array.from(set).map(String);
+      renderFilterTabs(cachedCategories, 'all');
+    } else {
+      // ensure filter UI marks the active tab
+      renderFilterTabs(cachedCategories, category);
+    }
+
+    if (!rooms.length) {
+      console.debug('loadRooms: no rooms returned from API');
+      // hide all static cards if none returned
+      const staticCards = Array.from(document.querySelectorAll('.rooms-list .room-card'));
+      staticCards.forEach(c => c.classList.remove('show'));
       return;
     }
+
+    // If we're loading the full list, restore original static markup first
+    if (!category) {
+      const container = document.querySelector('.rooms-list');
+      if (container && originalRoomsHTML) {
+        container.innerHTML = originalRoomsHTML;
+      }
+    }
+    renderRooms(rooms);
   } catch (e) {
-    console.debug('searchRooms service error', e);
+    console.debug('loadRooms error', e);
+    // leave static markup in place as fallback
+  }
+}
+
+function renderRooms(rooms) {
+  const container = document.querySelector('.rooms-list');
+  if (!container) return;
+
+  // Find existing static cards so we preserve title, rating and amenities as requested
+  const staticCards = Array.from(container.querySelectorAll('.room-card'));
+
+  // Update existing static cards with DB data where possible
+  for (let i = 0; i < rooms.length; i++) {
+    const r = rooms[i];
+    const price = Number(r.price) || 0;
+    const desc = r.description || '';
+    const type = (r.subtype || r.category || 'all').toString().toLowerCase();
+    const id = r.id || '';
+
+    if (staticCards[i]) {
+      const card = staticCards[i];
+      card.setAttribute('data-type', type);
+      card.setAttribute('data-id', id);
+
+      // update description while preserving inner structure elsewhere
+      const descEl = card.querySelector('.room-description');
+      if (descEl) {
+        descEl.textContent = desc;
+      }
+
+      // update price display (element with class 'price')
+      const priceEl = card.querySelector('.price');
+      if (priceEl) {
+        priceEl.innerHTML = `$${price.toLocaleString()} <span>MXN</span>`;
+      }
+
+      // update title if API provides a more specific value (subtype/category or title)
+      const titleEl = card.querySelector('.room-title h3');
+      const apiTitle = r.title || r.name || r.subtype || r.category || null;
+      if (titleEl && apiTitle) {
+        titleEl.textContent = String(apiTitle);
+      }
+
+      // update rating if provided by API (keep static if not)
+      const ratingEl = card.querySelector('.room-rating');
+      if (ratingEl && (r.rating || r.rating === 0)) {
+        // accept numeric or string rating
+        ratingEl.textContent = String(r.rating);
+      }
+
+      // update amenities if API returns them (comma-separated or array)
+      const amenitiesEl = card.querySelector('.room-amenities');
+      if (amenitiesEl && r.amenities) {
+        let items = [];
+        if (Array.isArray(r.amenities)) items = r.amenities;
+        else if (typeof r.amenities === 'string') items = r.amenities.split(',').map(s => s.trim()).filter(Boolean);
+        if (items.length) {
+          amenitiesEl.innerHTML = items.map(it => `<span class="amenity">${it}</span>`).join(' ');
+        }
+      }
+
+      // update image if API provides an image_url, otherwise try a local fallback by type
+      const imgEl = card.querySelector('.room-image');
+      if (imgEl) {
+        const makeResolved = (url) => {
+          if (!url) return null;
+          // if url is absolute path starting with '/', prefix API_BASE
+          if (String(url).startsWith('/')) {
+            const base = (window.API_BASE || '').replace(/\/$/, '');
+            return base + url;
+          }
+          return url;
+        };
+        const resolved = makeResolved(r.image_url) || (window.API_BASE.replace(/\/$/, '') + '/images/rooms/' + encodeURIComponent(type) + '.jpg');
+        imgEl.src = resolved;
+      }
+
+      // update reserve button to pass subtype/category and current price
+      const btn = card.querySelector('.btn-reserve');
+      if (btn) {
+        // prefer subtype for the visible type; fallback to category
+        const subtypeSafe = String(type).replace(/'/g, "\\'");
+        btn.setAttribute('onclick', `reserveRoom('${subtypeSafe}', ${price})`);
+      }
+
+      // keep title, room-rating and room-amenities as they are in the static HTML
+    } else {
+      // create a new card when API returns more rooms than static markup
+      const div = document.createElement('div');
+      div.className = 'room-card show';
+      div.setAttribute('data-type', type);
+      div.setAttribute('data-id', id);
+      const titleText = (r.subtype || r.category || 'Habitación').toString();
+      const safeTitle = titleText.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const safeDesc = desc.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const dynamicImg = r.image_url ? (String(r.image_url).startsWith('/') ? (window.API_BASE.replace(/\/$/, '') + r.image_url) : r.image_url) : ('https://source.unsplash.com/featured/?hotel,room,' + encodeURIComponent(type));
+      div.innerHTML = `
+        <div class="room-image-container">
+          <img src="${dynamicImg}" alt="${safeTitle}" class="room-image">
+        </div>
+        <div class="room-details">
+          <div>
+            <div class="room-header">
+              <div class="room-title">
+                <h3>${safeTitle}</h3>
+                <div class="room-rating">★★★★☆ 4.5 (N/A)</div>
+              </div>
+            </div>
+            <p class="room-description">${safeDesc}</p>
+            <div class="room-amenities">
+              <span class="amenity">📶 WiFi Gratis</span>
+              <span class="amenity">🚿 Baño Privado</span>
+              <span class="amenity">📺 TV</span>
+            </div>
+          </div>
+          <div class="room-footer">
+            <div class="price-info">
+              <span class="price-label">Precio por noche</span>
+              <div class="price">$${price.toLocaleString()} <span>MXN</span></div>
+            </div>
+            <button class="btn-reserve" onclick="reserveRoom('${type}', ${price})">Ver Detalles</button>
+          </div>
+        </div>
+      `;
+      container.appendChild(div);
+    }
   }
 
-  alert('Buscando habitaciones disponibles...\nCheck-in: ' + checkin + '\nCheck-out: ' + checkout);
+  // Hide extra static cards if API returned fewer rooms than static markup
+  if (staticCards.length > rooms.length) {
+    for (let j = rooms.length; j < staticCards.length; j++) {
+      staticCards[j].classList.remove('show');
+    }
+  }
+}
+
+function renderFilterTabs(categories, activeCategory) {
+  const tabsContainer = document.querySelector('.filter-tabs');
+  if (!tabsContainer) return;
+  // Always show 'Todas' first
+  tabsContainer.innerHTML = '';
+  const allBtn = document.createElement('button');
+  allBtn.className = (activeCategory === 'all' || !activeCategory) ? 'active' : '';
+  allBtn.setAttribute('data-filter', 'all');
+  allBtn.textContent = 'Todas';
+  allBtn.addEventListener('click', () => {
+    // load all rooms
+    clearActiveFilter(tabsContainer);
+    allBtn.classList.add('active');
+    loadRooms(null);
+  });
+  tabsContainer.appendChild(allBtn);
+
+  categories.forEach(cat => {
+    const btn = document.createElement('button');
+    const isActive = (String(cat) === String(activeCategory));
+    btn.className = isActive ? 'active' : '';
+    btn.setAttribute('data-filter', cat);
+    btn.textContent = cat.charAt(0).toUpperCase() + String(cat).slice(1);
+    btn.addEventListener('click', () => {
+      clearActiveFilter(tabsContainer);
+      btn.classList.add('active');
+      loadRooms(cat);
+    });
+    tabsContainer.appendChild(btn);
+  });
+}
+
+function clearActiveFilter(container) {
+  Array.from(container.querySelectorAll('button')).forEach(b => b.classList.remove('active'));
+}
+
+function searchRooms() {
+  (async () => {
+    const checkin = document.getElementById('checkin')?.value;
+    const checkout = document.getElementById('checkout')?.value;
+    const destination = document.getElementById('destination')?.value;
+    const guests = Number(document.getElementById('guests')?.value || 1);
+
+    if (!destination) {
+      alert('Por favor selecciona un destino');
+      return;
+    }
+    if (!checkin || !checkout) {
+      alert('Por favor selecciona las fechas de entrada y salida');
+      return;
+    }
+    if (new Date(checkin) >= new Date(checkout)) {
+      alert('La fecha de salida debe ser posterior a la fecha de entrada');
+      return;
+    }
+
+    try {
+      // fetch rooms for destination
+      const resp = await roomsSvc.listRooms({ destination: destination, per_page: 200 });
+      const rooms = (resp && resp.data) ? resp.data : [];
+
+      // filter by capacity
+      const candidateRooms = rooms.filter(r => (Number(r.capacity) >= guests));
+
+      if (!candidateRooms.length) {
+        alert('No hay habitaciones aptas para el número de huéspedes en ese destino');
+        return;
+      }
+
+      // check availability in parallel
+      const fromIso = new Date(checkin).toISOString();
+      const toIso = new Date(checkout).toISOString();
+      const checks = await Promise.all(candidateRooms.map(async (room) => {
+        const ok = await isRoomAvailable(room.id, fromIso, toIso);
+        return ok ? room : null;
+      }));
+
+      const available = checks.filter(Boolean);
+      if (!available.length) {
+        alert('Lo siento, no hay habitaciones disponibles para las fechas seleccionadas en este destino');
+        // render none: clear list
+        const container = document.querySelector('.rooms-list');
+        if (container) container.innerHTML = '<p>No hay habitaciones disponibles para esas fechas.</p>';
+        return;
+      }
+
+      // show available rooms
+      const container = document.querySelector('.rooms-list');
+      if (container) container.innerHTML = '';
+      renderRooms(available);
+
+    } catch (e) {
+      console.error('searchRooms error', e);
+      alert('Error al buscar habitaciones. Revisa la consola.');
+    }
+  })();
 }
 
 function reserveRoom(tipo, precio) {
@@ -118,23 +402,8 @@ function goToLogin() { alert('Redirigiendo al inicio de sesión...'); }
 function goToRegister() { alert('Redirigiendo al registro...'); }
 
 function setupFilters() {
-  const filterButtons = document.querySelectorAll('.filter-tabs button');
-  const roomCards = document.querySelectorAll('.room-card');
-  if (!filterButtons.length || !roomCards.length) return;
-  filterButtons.forEach(button => {
-    button.addEventListener('click', function() {
-      filterButtons.forEach(btn => btn.classList.remove('active'));
-      this.classList.add('active');
-      const filter = this.getAttribute('data-filter');
-      roomCards.forEach(card => {
-        if (filter === 'all' || card.getAttribute('data-type') === filter) {
-          card.classList.add('show');
-        } else {
-          card.classList.remove('show');
-        }
-      });
-    });
-  });
+  // filter tabs are rendered dynamically via renderFilterTabs()
+  // this function kept for compatibility; actual listeners are attached when tabs are created
 }
 
 function toggleFAQ(button) {
@@ -177,6 +446,11 @@ window.openChat = openChat;
 // initialize behaviours
 document.addEventListener('DOMContentLoaded', () => {
   setDefaultDates();
+  // attempt to load live rooms from API; falls back to static HTML
+  // capture original static HTML so we can restore it when switching back to 'all'
+  const container = document.querySelector('.rooms-list');
+  if (container) originalRoomsHTML = container.innerHTML;
+  loadRooms();
   setupFilters();
   setupFAQ();
   setupSmoothScroll();

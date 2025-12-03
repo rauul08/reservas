@@ -64,9 +64,16 @@ class ReservationApiMapper
             $roomData = [
                 'id' => $room->getId(),
                 'number' => $room->getRoomNumber(),
-                'type' => $room->getRoomType(),
+                'category' => $room->getCategory(),
+                'subtype' => $room->getSubtype(),
+                'destination' => $room->getDestination(),
+                'title' => $room->getTitle(),
+                'rating' => $room->getRating(),
+                'amenities' => $room->getAmenities(),
+                'capacity' => $room->getCapacity(),
                 'description' => $room->getDescription(),
                 'price_per_night' => $room->getPrice(),
+                'image_url' => $room->getImageUrl(),
             ];
         }
 

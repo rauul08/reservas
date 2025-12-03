@@ -38,4 +38,14 @@ return function (App $app) {
         // Cancel reservation
         $group->delete('/{id}', \App\Reservations\Infrastructure\Controllers\CancelReservationController::class);
     });
+
+    // Rooms endpoints for frontend integration
+    $app->group('/rooms', function (Group $group) {
+        $group->get('/available', \App\Rooms\Infrastructure\Controllers\AvailableRoomsController::class);
+        $group->get('', \App\Rooms\Infrastructure\Controllers\ListRoomsController::class);
+        $group->post('', \App\Rooms\Infrastructure\Controllers\CreateRoomController::class);
+        $group->get('/{id}', \App\Rooms\Infrastructure\Controllers\GetRoomController::class);
+        $group->put('/{id}', \App\Rooms\Infrastructure\Controllers\UpdateRoomController::class);
+        $group->delete('/{id}', \App\Rooms\Infrastructure\Controllers\DeleteRoomController::class);
+    });
 };

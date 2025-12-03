@@ -30,7 +30,9 @@
         <div class="search-box">
             <div class="search-field">
                 <label>Destino</label>
-                <input type="text" placeholder="¿A dónde vas?" value="Ciudad de México">
+                <select id="destination">
+                    <option value="">Cargando destinos...</option>
+                </select>
             </div>
             <div class="search-field">
                 <label>Check-in</label>
@@ -42,11 +44,11 @@
             </div>
             <div class="search-field">
                 <label>Huéspedes</label>
-                <select>
-                    <option>1 adulto</option>
-                    <option selected>2 adultos</option>
-                    <option>3 adultos</option>
-                    <option>4 adultos</option>
+                <select id="guests">
+                    <option value="1">1 adulto</option>
+                    <option value="2" selected>2 adultos</option>
+                    <option value="3">3 adultos</option>
+                    <option value="4">4 adultos</option>
                 </select>
             </div>
             <button class="btn-search" onclick="searchRooms()">Buscar</button>
@@ -69,7 +71,7 @@
             <div class="room-card show" data-type="sencilla">
                 <div class="room-image-container">
                     <img src="https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=400&h=300&fit=crop" alt="Habitación Sencilla" class="room-image">
-                    <span class="room-badge">Más Reservada</span>
+                    <span class="room-badge">Nueva</span>
                 </div>
                 <div class="room-details">
                     <div>
@@ -138,7 +140,7 @@
             <div class="room-card show" data-type="sencilla">
                 <div class="room-image-container">
                     <img src="https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=400&h=300&fit=crop" alt="Habitación Sencilla Básica" class="room-image">
-                    <span class="room-badge">Nueva</span>
+                    <span class="room-badge">Más Reservada</span>
                 </div>
                 <div class="room-details">
                     <div>
@@ -172,7 +174,7 @@
             <div class="room-card show" data-type="doble">
                 <div class="room-image-container">
                     <img src="https://images.unsplash.com/photo-1590490360182-c33d57733427?w=400&h=300&fit=crop" alt="Habitación Doble" class="room-image">
-                    <span class="room-badge">Mejor Valorada</span>
+                    <span class="room-badge">Económica</span>
                 </div>
                 <div class="room-details">
                     <div>
@@ -242,7 +244,7 @@
             <div class="room-card show" data-type="doble">
                 <div class="room-image-container">
                             <img src="https://images.unsplash.com/photo-1590490360182-c33d57733427?w=400&h=300&fit=crop" alt="Habitación Doble Económica" class="room-image">
-                    <span class="room-badge">Económica</span>
+                    <span class="room-badge">Mejor Valorada</span>
                 </div>
                 <div class="room-details">
                     <div>
@@ -276,7 +278,7 @@
             <div class="room-card show" data-type="suite">
                 <div class="room-image-container">
                     <img src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=400&h=300&fit=crop" alt="Suite Familiar" class="room-image">
-                    <span class="room-badge">Premium</span>
+                    <span class="room-badge">Junior</span>
                 </div>
                 <div class="room-details">
                     <div>
@@ -346,7 +348,7 @@
             <div class="room-card show" data-type="suite">
                 <div class="room-image-container">
                     <img src="https://images.unsplash.com/photo-1618773928121-c32242e63f39?w=400&h=300&fit=crop" alt="Suite Junior" class="room-image">
-                    <span class="room-badge">Junior</span>
+                    <span class="room-badge">Premium</span>
                 </div>
                 <div class="room-details">
                     <div>
