@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReservaHotel - Encuentra tu Habitación Ideal</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="#" class="logo">ReservaHotel</a>
+            <ul class="nav-links">
+                <li><a href="#inicio">Inicio</a></li>
+                <li><a href="#habitaciones">Habitaciones</a></li>
+                <li><a href="#servicios">Servicios</a></li>
+                <li><a href="#ayuda">Ayuda</a></li>
+            </ul>
+        <div class="auth-buttons">
+    <button class="btn-register" onclick="window.location.href='registro.html'">Registrarse</button>
+    <button class="btn-login" onclick="window.location.href='inicio.html'">Iniciar Sesión</button>
+        </div>
+
+        </nav>
+    </header>
+
+    <section class="hero-search" id="inicio">
+        <h1>Encuentra tu Habitación Perfecta</h1>
+        <p>Compara precios y reserva con las mejores tarifas garantizadas</p>
+        <div class="search-box">
+            <div class="search-field">
+                <label>Destino</label>
+                <input type="text" placeholder="¿A dónde vas?" value="Ciudad de México">
+            </div>
+            <div class="search-field">
+                <label>Check-in</label>
+                <input type="date" id="checkin">
+            </div>
+            <div class="search-field">
+                <label>Check-out</label>
+                <input type="date" id="checkout">
+            </div>
+            <div class="search-field">
+                <label>Huéspedes</label>
+                <select>
+                    <option>1 adulto</option>
+                    <option selected>2 adultos</option>
+                    <option>3 adultos</option>
+                    <option>4 adultos</option>
+                </select>
+            </div>
+            <button class="btn-search" onclick="searchRooms()">Buscar</button>
+        </div>
+    </section>
+
+    <div class="container">
+        <div class="section-header">
+            <h2 id="habitaciones">Habitaciones Disponibles</h2>
+            <div class="filter-tabs">
+                <button class="active" data-filter="all">Todas</button>
+                <button data-filter="sencilla">Sencillas</button>
+                <button data-filter="doble">Dobles</button>
+                <button data-filter="suite">Suites</button>
+            </div>
+        </div>
+
+        <div class="rooms-list">
+            <!-- Habitación Sencilla 1 -->
+            <div class="room-card show" data-type="sencilla">
+                <div class="room-image-container">
+                    <img src="https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=400&h=300&fit=crop" alt="Habitación Sencilla" class="room-image">
+                    <span class="room-badge">Más Reservada</span>
+                </div>
+                <div class="room-details">
+                    <div>
+                        <div class="room-header">
+                            <div class="room-title">
+                                <h3>Habitación Sencilla Ejecutiva</h3>
+                                <div class="room-rating">★★★★☆ 4.5 (234 opiniones)</div>
+                            </div>
+                        </div>
+                        <p class="room-description">
+                            Habitación ideal para viajeros de negocios o turistas individuales. Espacio cómodo con todas las comodidades necesarias para una estancia agradable.
+                        </p>
+                        <div class="room-amenities">
+                            <span class="amenity">📶 WiFi Gratis</span>
+                            <span class="amenity">🚿 Baño Privado</span>
+                            <span class="amenity">📺 TV Cable</span>
+                            <span class="amenity">❄️ Aire Acondicionado</span>
+                            <span class="amenity">☕ Cafetera</span>
+                        </div>
+                    </div>
+                    <div class="room-footer">
+                        <div class="price-info">
+                            <span class="price-label">Precio por noche</span>
+                            <div class="price">$500 <span>MXN</span></div>
+                        </div>
+                        <button class="btn-reserve" onclick="reserveRoom('sencilla', 500)">Ver Detalles</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Habitación Sencilla 2 -->
+            <div class="room-card show" data-type="sencilla">
+                <div class="room-image-container">
+                    <img src="https://images.unsplash.com/photo-1540553016722-983e48a2cd10?w=400&h=300&fit=crop" alt="Habitación Sencilla Estándar" class="room-image">
+                    <span class="room-badge">Oferta</span>
+                </div>
+                <div class="room-details">
+                    <div>
+                        <div class="room-header">
+                            <div class="room-title">
+                                <h3>Habitación Sencilla Estándar</h3>
+                                <div class="room-rating">★★★☆☆ 4.2 (156 opiniones)</div>
+                            </div>
+                        </div>
+                        <p class="room-description">
+                            Opción económica y cómoda para viajeros solitarios. Cama individual, escritorio y baño privado perfecto para una estancia básica y funcional.
+                        </p>
+                        <div class="room-amenities">
+                            <span class="amenity">📶 WiFi Gratis</span>
+                            <span class="amenity">🚿 Baño Privado</span>
+                            <span class="amenity">📺 TV</span>
+                            <span class="amenity">❄️ Aire Acondicionado</span>
+                        </div>
+                    </div>
+                    <div class="room-footer">
+                        <div class="price-info">
+                            <span class="price-label">Precio por noche</span>
+                            <div class="price">$350 <span>MXN</span></div>
+                        </div>
+                        <button class="btn-reserve" onclick="reserveRoom('sencilla', 350)">Ver Detalles</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Habitación Sencilla 3 -->
+            <div class="room-card show" data-type="sencilla">
+                <div class="room-image-container">
+                    <img src="https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=400&h=300&fit=crop" alt="Habitación Sencilla Básica" class="room-image">
+                    <span class="room-badge">Nueva</span>
+                </div>
+                <div class="room-details">
+                    <div>
+                        <div class="room-header">
+                            <div class="room-title">
+                                <h3>Habitación Sencilla Básica</h3>
+                                <div class="room-rating">★★★☆☆ 4.0 (98 opiniones)</div>
+                            </div>
+                        </div>
+                        <p class="room-description">
+                            Habitación sencilla con lo esencial para una estancia tranquila. Decoración moderna, cama individual y baño compartido en pasillo.
+                        </p>
+                        <div class="room-amenities">
+                            <span class="amenity">📶 WiFi Gratis</span>
+                            <span class="amenity">🚿 Baño Compartido</span>
+                            <span class="amenity">📺 TV</span>
+                            <span class="amenity">❄️ Aire Acondicionado</span>
+                        </div>
+                    </div>
+                    <div class="room-footer">
+                        <div class="price-info">
+                            <span class="price-label">Precio por noche</span>
+                            <div class="price">$250 <span>MXN</span></div>
+                        </div>
+                        <button class="btn-reserve" onclick="reserveRoom('sencilla', 250)">Ver Detalles</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Habitación Doble 1 -->
+            <div class="room-card show" data-type="doble">
+                <div class="room-image-container">
+                    <img src="https://images.unsplash.com/photo-1590490360182-c33d57733427?w=400&h=300&fit=crop" alt="Habitación Doble" class="room-image">
+                    <span class="room-badge">Mejor Valorada</span>
+                </div>
+                <div class="room-details">
+                    <div>
+                        <div class="room-header">
+                            <div class="room-title">
+                                <h3>Habitación Doble Deluxe</h3>
+                                <div class="room-rating">★★★★★ 4.8 (412 opiniones)</div>
+                            </div>
+                        </div>
+                        <p class="room-description">
+                            Perfecta para parejas o amigos. Amplia habitación con cama king size, área de trabajo, minibar y hermosas vistas. Incluye desayuno buffet.
+                        </p>
+                        <div class="room-amenities">
+                            <span class="amenity">📶 WiFi Gratis</span>
+                            <span class="amenity">🛁 Bañera</span>
+                            <span class="amenity">📺 Smart TV</span>
+                            <span class="amenity">🍽️ Minibar</span>
+                            <span class="amenity">🏋️ Gym</span>
+                        </div>
+                    </div>
+                    <div class="room-footer">
+                        <div class="price-info">
+                            <span class="price-label">Precio por noche</span>
+                            <div class="price">$800 <span>MXN</span></div>
+                        </div>
+                        <button class="btn-reserve" onclick="reserveRoom('doble', 800)">Ver Detalles</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Habitación Doble 2 -->
+            <div class="room-card show" data-type="doble">
+                <div class="room-image-container">
+                    <img src="https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=400&h=300&fit=crop" alt="Habitación Doble Clásica" class="room-image">
+                    <span class="room-badge">Popular</span>
+                </div>
+                <div class="room-details">
+                    <div>
+                        <div class="room-header">
+                            <div class="room-title">
+                                <h3>Habitación Doble Clásica</h3>
+                                <div class="room-rating">★★★★☆ 4.6 (298 opiniones)</div>
+                            </div>
+                        </div>
+                        <p class="room-description">
+                            Habitación doble con dos camas individuales, ideal para amigos o familia. Incluye escritorio, silla y baño con regadera. Ambiente acogedor y cálido.
+                        </p>
+                        <div class="room-amenities">
+                            <span class="amenity">📶 WiFi Gratis</span>
+                            <span class="amenity">🚿 Baño Privado</span>
+                            <span class="amenity">📺 TV</span>
+                            <span class="amenity">🍽️ Minibar</span>
+                            <span class="amenity">❄️ Aire Acondicionado</span>
+                        </div>
+                    </div>
+                    <div class="room-footer">
+                        <div class="price-info">
+                            <span class="price-label">Precio por noche</span>
+                            <div class="price">$650 <span>MXN</span></div>
+                        </div>
+                        <button class="btn-reserve" onclick="reserveRoom('doble', 650)">Ver Detalles</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Habitación Doble 3 -->
+            <div class="room-card show" data-type="doble">
+                <div class="room-image-container">
+                            <img src="https://images.unsplash.com/photo-1590490360182-c33d57733427?w=400&h=300&fit=crop" alt="Habitación Doble Económica" class="room-image">
+                    <span class="room-badge">Económica</span>
+                </div>
+                <div class="room-details">
+                    <div>
+                        <div class="room-header">
+                            <div class="room-title">
+                                <h3>Habitación Doble Económica</h3>
+                                <div class="room-rating">★★★☆☆ 4.1 (176 opiniones)</div>
+                            </div>
+                        </div>
+                        <p class="room-description">
+                            Opción ideal para presupuestos ajustados. Dos camas individuales, baño privado y todas las comodidades básicas para una estancia cómoda.
+                        </p>
+                        <div class="room-amenities">
+                            <span class="amenity">📶 WiFi Gratis</span>
+                            <span class="amenity">🚿 Baño Privado</span>
+                            <span class="amenity">📺 TV</span>
+                            <span class="amenity">❄️ Aire Acondicionado</span>
+                        </div>
+                    </div>
+                    <div class="room-footer">
+                        <div class="price-info">
+                            <span class="price-label">Precio por noche</span>
+                            <div class="price">$500 <span>MXN</span></div>
+                        </div>
+                        <button class="btn-reserve" onclick="reserveRoom('doble', 500)">Ver Detalles</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Suite 1 -->
+            <div class="room-card show" data-type="suite">
+                <div class="room-image-container">
+                    <img src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=400&h=300&fit=crop" alt="Suite Familiar" class="room-image">
+                    <span class="room-badge">Premium</span>
+                </div>
+                <div class="room-details">
+                    <div>
+                        <div class="room-header">
+                            <div class="room-title">
+                                <h3>Suite Familiar Premium</h3>
+                                <div class="room-rating">★★★★★ 4.9 (189 opiniones)</div>
+                            </div>
+                        </div>
+                        <p class="room-description">
+                            Espaciosa suite con dos habitaciones, sala de estar, comedor y cocina equipada. Ideal para familias hasta 6 personas. Incluye todos los servicios premium.
+                        </p>
+                        <div class="room-amenities">
+                            <span class="amenity">📶 WiFi Premium</span>
+                            <span class="amenity">🍳 Cocina</span>
+                            <span class="amenity">🛋️ Sala</span>
+                            <span class="amenity">🏊 Piscina</span>
+                            <span class="amenity">🍽️ Servicio 24h</span>
+                        </div>
+                    </div>
+                    <div class="room-footer">
+                        <div class="price-info">
+                            <span class="price-label">Precio por noche</span>
+                            <div class="price">$1,500 <span>MXN</span></div>
+                        </div>
+                        <button class="btn-reserve" onclick="reserveRoom('suite', 1500)">Ver Detalles</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Suite 2 -->
+            <div class="room-card show" data-type="suite">
+                <div class="room-image-container">
+                    <img src="https://images.unsplash.com/photo-1566665797739-1674de7a421a?w=400&h=300&fit=crop" alt="Suite Ejecutiva" class="room-image">
+                    <span class="room-badge">Ejecutiva</span>
+                </div>
+                <div class="room-details">
+                    <div>
+                        <div class="room-header">
+                            <div class="room-title">
+                                <h3>Suite Ejecutiva</h3>
+                                <div class="room-rating">★★★★★ 4.7 (254 opiniones)</div>
+                            </div>
+                        </div>
+                        <p class="room-description">
+                            Elegante suite con dormitorio separado, sala de estar y baño con tina de hidromasaje. Perfecta para viajeros de negocios que buscan confort y privacidad.
+                        </p>
+                        <div class="room-amenities">
+                            <span class="amenity">📶 WiFi Premium</span>
+                            <span class="amenity">🛁 Hidromasaje</span>
+                            <span class="amenity">🪑 Sala Privada</span>
+                            <span class="amenity">🍽️ Minibar</span>
+                            <span class="amenity">💼 Área de Trabajo</span>
+                        </div>
+                    </div>
+                    <div class="room-footer">
+                        <div class="price-info">
+                            <span class="price-label">Precio por noche</span>
+                            <div class="price">$1,200 <span>MXN</span></div>
+                        </div>
+                        <button class="btn-reserve" onclick="reserveRoom('suite', 1200)">Ver Detalles</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Suite 3 -->
+            <div class="room-card show" data-type="suite">
+                <div class="room-image-container">
+                    <img src="https://images.unsplash.com/photo-1618773928121-c32242e63f39?w=400&h=300&fit=crop" alt="Suite Junior" class="room-image">
+                    <span class="room-badge">Junior</span>
+                </div>
+                <div class="room-details">
+                    <div>
+                        <div class="room-header">
+                            <div class="room-title">
+                                <h3>Suite Junior</h3>
+                                <div class="room-rating">★★★★☆ 4.5 (132 opiniones)</div>
+                            </div>
+                        </div>
+                        <p class="room-description">
+                            Habitación amplia con zona de descanso y escritorio independiente. Baño moderno con amenities de lujo. Ideal para estancias prolongadas o parejas.
+                        </p>
+                        <div class="room-amenities">
+                            <span class="amenity">📶 WiFi Premium</span>
+                            <span class="amenity">🚿 Baño de Lujo</span>
+                            <span class="amenity">🪑 Zona de Descanso</span>
+                            <span class="amenity">🍽️ Minibar</span>
+                            <span class="amenity">☕ Cafetera Nespresso</span>
+                        </div>
+                    </div>
+                    <div class="room-footer">
+                        <div class="price-info">
+                            <span class="price-label">Precio por noche</span>
+                            <div class="price">$950 <span>MXN</span></div>
+                        </div>
+                        <button class="btn-reserve" onclick="reserveRoom('suite', 950)">Ver Detalles</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="info-banner" id="servicios">
+        <h2>¿Por qué reservar con nosotros?</h2>
+        <div class="features-grid">
+            <div class="feature">
+                <div class="feature-icon">💰</div>
+                <h3>Mejor Precio Garantizado</h3>
+                <p>Si encuentras un precio más bajo, te devolvemos la diferencia</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🔒</div>
+                <h3>Pago Seguro</h3>
+                <p>Tus datos están protegidos con encriptación SSL</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">📞</div>
+                <h3>Soporte 24/7</h3>
+                <p>Estamos disponibles para ayudarte en cualquier momento</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">✨</div>
+                <h3>Sin Cargos Ocultos</h3>
+                <p>El precio que ves es el precio que pagas</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="help-section" id="ayuda">
+        <div class="help-container">
+            <div class="help-header">
+                <h2>Centro de Ayuda</h2>
+                <p>Estamos aquí para asistirte en todo lo que necesites</p>
+            </div>
+            <div class="help-grid">
+                <div class="help-card">
+                    <div class="help-icon">📞</div>
+                    <h3>Contacto Telefónico</h3>
+                    <p>Llámanos de Lunes a Domingo</p>
+                    <p class="help-info">+52 (55) 1234-5678</p>
+                    <p class="help-hours">Horario: 24/7</p>
+                </div>
+                <div class="help-card">
+                    <div class="help-icon">✉️</div>
+                    <h3>Correo Electrónico</h3>
+                    <p>Escríbenos y te responderemos pronto</p>
+                    <p class="help-info">info@reservahotel.com</p>
+                    <p class="help-hours">Respuesta en 24 horas</p>
+                </div>
+                <div class="help-card">
+                    <div class="help-icon">💬</div>
+                    <h3>Chat en Vivo</h3>
+                    <p>Chatea con nuestro equipo</p>
+                    <button class="btn-chat" onclick="openChat()">Iniciar Chat</button>
+                    <p class="help-hours">Disponible 9:00 - 22:00 hrs</p>
+                </div>
+                <div class="help-card">
+                    <div class="help-icon">📍</div>
+                    <h3>Ubicación</h3>
+                    <p>Visítanos en nuestras oficinas</p>
+                    <p class="help-info">Av. Reforma 123, Col. Centro</p>
+                    <p class="help-hours">Ciudad de México, 06000</p>
+                </div>
+            </div>
+            
+            <div class="faq-section">
+                <h3 class="faq-title">Preguntas Frecuentes</h3>
+                <div class="faq-list">
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFAQ(this)">
+                            <span>¿Cómo puedo hacer una reservación?</span>
+                            <span class="faq-arrow">▼</span>
+                        </button>
+                        <div class="faq-answer">
+                            <p>Puedes hacer tu reservación directamente desde nuestro sitio web. Solo necesitas seleccionar tus fechas, elegir la habitación que prefieras y completar el proceso de registro. Una vez confirmada, recibirás un correo con los detalles de tu reserva.</p>
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFAQ(this)">
+                            <span>¿Puedo cancelar mi reservación?</span>
+                            <span class="faq-arrow">▼</span>
+                        </button>
+                        <div class="faq-answer">
+                            <p>Sí, puedes cancelar tu reservación hasta 24 horas antes de tu fecha de check-in sin ningún cargo. Para cancelaciones con menos de 24 horas, se aplicará un cargo del 50% del total de la reserva.</p>
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFAQ(this)">
+                            <span>¿Qué formas de pago aceptan?</span>
+                            <span class="faq-arrow">▼</span>
+                        </button>
+                        <div class="faq-answer">
+                            <p>Aceptamos tarjetas de crédito (Visa, Mastercard, American Express), tarjetas de débito, PayPal y transferencias bancarias. Todos los pagos son procesados de forma segura.</p>
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFAQ(this)">
+                            <span>¿A qué hora es el check-in y check-out?</span>
+                            <span class="faq-arrow">▼</span>
+                        </button>
+                        <div class="faq-answer">
+                            <p>El check-in es a partir de las 15:00 hrs y el check-out es hasta las 12:00 hrs. Si necesitas un horario diferente, contáctanos con anticipación y haremos nuestro mejor esfuerzo para acomodarte.</p>
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFAQ(this)">
+                            <span>¿Las habitaciones incluyen desayuno?</span>
+                            <span class="faq-arrow">▼</span>
+                        </button>
+                        <div class="faq-answer">
+                            <p>Las habitaciones Doble Deluxe y Suite Familiar incluyen desayuno buffet. Para la Habitación Sencilla, el desayuno puede agregarse por $150 MXN por persona.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>Acerca de</h4>
+                <ul>
+                    <li><a href="#">Quiénes Somos</a></li>
+                    <li><a href="#">Trabaja con Nosotros</a></li>
+                    <li><a href="#">Prensa</a></li>
+                    <li><a href="#">Blog</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Soporte</h4>
+                <ul>
+                    <li><a href="#">Centro de Ayuda</a></li>
+                    <li><a href="#">Preguntas Frecuentes</a></li>
+                    <li><a href="#">Contacto</a></li>
+                    <li><a href="#">Políticas</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Legal</h4>
+                <ul>
+                    <li><a href="#">Términos y Condiciones</a></li>
+                    <li><a href="#">Política de Privacidad</a></li>
+                    <li><a href="#">Cookies</a></li>
+                    <li><a href="#">Aviso Legal</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Síguenos</h4>
+                <ul>
+                    <li><a href="#">Facebook</a></li>
+                    <li><a href="#">Instagram</a></li>
+                    <li><a href="#">Twitter</a></li>
+                    <li><a href="#">LinkedIn</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 ReservaHotel. Todos los derechos reservados. | Sistema de Reservaciones Profesional</p>
+        </div>
+    </footer>
+
+    <script type="module" src="./site.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Reservas — Demo admin</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="container">
+    <h1>Reservas — Demo</h1>
+
+    <section class="panel">
+      <h2>Listar reservas</h2>
+      <div class="filters">
+        <label>Usuario: <input id="filterUser" type="number" min="1" /></label>
+        <label>Habitación: <input id="filterRoom" type="number" min="1" /></label>
+        <label>Estado: 
+          <select id="filterStatus">
+            <option value="">(todos)</option>
+            <option value="pending">pending</option>
+            <option value="confirmed">confirmed</option>
+            <option value="cancelled">cancelled</option>
+          </select>
+        </label>
+        <label>From: <input id="filterFrom" type="datetime-local" /></label>
+        <label>To: <input id="filterTo" type="datetime-local" /></label>
+        <button id="btnApply">Aplicar</button>
+      </div>
+
+      <div id="listMeta" class="meta"></div>
+      <ul id="reservationsList" class="list"></ul>
+
+      <div class="pagination">
+        <button id="prevPage">Anterior</button>
+        <span id="pageInfo">1</span>
+        <button id="nextPage">Siguiente</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Crear reserva</h2>
+      <form id="createForm">
+        <label>Usuario id: <input name="user_id" required type="number" /></label>
+        <label>Habitación id: <input name="room_id" required type="number" /></label>
+        <label>Check in: <input name="check_in" required type="datetime-local" /></label>
+        <label>Check out: <input name="check_out" required type="datetime-local" /></label>
+        <button type="submit">Crear</button>
+      </form>
+      <div id="createResult" class="result"></div>
+    </section>
+  </main>
+
+  <script>
+    // Ajusta esta ruta según cómo sirvas la app desde Apache.
+    // Si accedes a http://localhost/reservademo/public/... usa '/reservademo/public'
+    // Si tu DocumentRoot apunta directamente a `public/`, deja la cadena vacía ''.
+    window.API_BASE = '/reservademo/public';
+  </script>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
