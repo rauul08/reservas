@@ -11,7 +11,7 @@ class Settings implements SettingsInterface
     private $settings;
 
     /**
-     * Settings constructor.
+     * Constructor de configuraciones.
      * @param array $settings
      */
     public function __construct(array $settings)

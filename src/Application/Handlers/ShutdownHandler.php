@@ -25,7 +25,7 @@ class ShutdownHandler
     private $displayErrorDetails;
 
     /**
-     * ShutdownHandler constructor.
+     * Constructor de ShutdownHandler.
      *
      * @param Request           $request
      * @param HttpErrorHandler  $errorHandler

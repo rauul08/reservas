@@ -15,7 +15,7 @@ class Reservation
     protected $userId;
     protected $roomId;
     protected $totalPrice;
-    protected $status; // 'pending','confirmed','cancelled'
+    protected $status; // 'pendiente', 'confirmada', 'cancelada'
     protected $createdAt;
 
     public function __construct(int $id, CheckInDate $checkIn, CheckOutDate $checkOut, int $userId, int $roomId, ?float $totalPrice, string $status, DateTimeImmutable $createdAt)

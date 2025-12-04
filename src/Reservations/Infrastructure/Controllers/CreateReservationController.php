@@ -40,7 +40,7 @@ class CreateReservationController
             return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
         }
 
-        // Validate required fields
+        // Validar campos obligatorios
         $required = ['check_in', 'check_out', 'user_id', 'room_id'];
         $missing = [];
         foreach ($required as $f) {
@@ -58,7 +58,7 @@ class CreateReservationController
         try {
             $reservation = $this->useCase->execute($data);
 
-            // Map to API DTO and return full object
+            // Asignar a API DTO y devolver el objeto completo
             $payload = json_encode($this->apiMapper->toArray($reservation));
             $response->getBody()->write($payload);
 
@@ -68,7 +68,7 @@ class CreateReservationController
             $response->getBody()->write($payload);
             return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
         } catch (\Throwable $e) {
-            // Log error if desired via injected logger; here return generic 500
+            // Registrar el error si se desea a través del registrador inyectado; aquí devuelve 500 genérico
             $payload = json_encode(['error' => 'Server error', 'details' => $e->getMessage()]);
             $response->getBody()->write($payload);
             return $response->withHeader('Content-Type', 'application/json')->withStatus(500);

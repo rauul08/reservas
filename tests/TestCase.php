@@ -22,35 +22,35 @@ class TestCase extends PHPUnit_TestCase
      */
     protected function getAppInstance(): App
     {
-        // Instantiate PHP-DI ContainerBuilder
+        // Crear una instancia de PHP-DI ContainerBuilder
         $containerBuilder = new ContainerBuilder();
 
-        // Container intentionally not compiled for tests.
+        // Contenedor no compilado intencionalmente para pruebas.
 
         // Set up settings
         $settings = require __DIR__ . '/../app/settings.php';
         $settings($containerBuilder);
 
-        // Set up dependencies
+        // Configurar dependencias
         $dependencies = require __DIR__ . '/../app/dependencies.php';
         $dependencies($containerBuilder);
 
-        // Set up repositories
+        // Configurar repositorios
         $repositories = require __DIR__ . '/../app/repositories.php';
         $repositories($containerBuilder);
 
-        // Build PHP-DI Container instance
+        // Crear una instancia de contenedor PHP-DI
         $container = $containerBuilder->build();
 
-        // Instantiate the app
+        // Instanciar la aplicación
         AppFactory::setContainer($container);
         $app = AppFactory::create();
 
-        // Register middleware
+        // Registrar middleware
         $middleware = require __DIR__ . '/../app/middleware.php';
         $middleware($app);
 
-        // Register routes
+        // Registrar rutas
         $routes = require __DIR__ . '/../app/routes.php';
         $routes($app);
 

@@ -34,7 +34,7 @@ class CreateReservation
      */
     public function execute(array $data): Reservation
     {
-        // Validate referenced entities exist and parse dates
+        // Validar que existan entidades referenciadas y analizar fechas
         $userId = (int) $data['user_id'];
         $roomId = (int) $data['room_id'];
 
@@ -54,18 +54,18 @@ class CreateReservation
             throw new \InvalidArgumentException('check_out must be greater than check_in');
         }
 
-        // Check room availability for the requested range
+        // Consulte la disponibilidad de habitaciones para el rango solicitado
         if ($this->repository->existsOverlappingReservation($roomId, $ci->toString(), $co->toString(), null)) {
             throw new \InvalidArgumentException('Room is occupied in the requested date range');
         }
 
-        // Calculate total price based on room price and number of nights
+        // Calcular el precio total según el precio de la habitación y el número de noches
         $nights = max(1, (int) $co->toDateTime()->diff($ci->toDateTime())->days);
         $pricePerNight = $room->getPrice();
         $totalPrice = $pricePerNight * $nights;
 
-        // Build a new Reservation entity with placeholder id (0) and computed price;
-        // repository.save will persist and return the persisted Reservation.
+        // Crea una nueva entidad de reserva con el identificador de marcador de posición (0) y el precio calculado.
+       // repository.save conservará y devolverá la reserva conservada.
         $reservation = new Reservation(
             0,
             $ci,

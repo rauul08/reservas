@@ -17,7 +17,7 @@ class CancelReservation
     }
 
     /**
-     * Cancel (mark as cancelled) a reservation and return updated entity
+     * Cancelar (marcar como cancelada) una reserva y devolver la entidad actualizada
      * @param int $id
      * @return Reservation
      */
@@ -32,14 +32,14 @@ class CancelReservation
             throw new \InvalidArgumentException('Reservation already cancelled');
         }
 
-        // Prevent cancelling reservations that have already ended
+        // Evitar la cancelación de reservas que ya han finalizado
         $now = new \DateTimeImmutable();
         $checkOut = $existing->getCheckOut()->toDateTime();
         if ($checkOut <= $now) {
             throw new \InvalidArgumentException('Cannot cancel a reservation that has already ended');
         }
 
-        // Create updated entity with status cancelled
+        // Crear entidad actualizada con estado cancelado
         $updated = new Reservation(
             $existing->getId(),
             $existing->getCheckIn(),

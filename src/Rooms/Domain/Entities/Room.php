@@ -9,11 +9,11 @@ class Room
 {
     protected $id;
     protected $roomNumber;
-    protected $roomType; // 'single'|'double'|'suite'
+    protected $roomType; // 'sencillo' | 'doble' | 'suite'
     protected $capacity;
     protected $price;
     protected $description;
-    protected $status; // 'available','maintenance','unavailable'
+    protected $status; // 'disponible', 'mantenimiento', 'no disponible'
 
     public function __construct(int $id, string $roomNumber, string $roomType, int $capacity, float $price, ?string $description, string $status = 'available')
     {

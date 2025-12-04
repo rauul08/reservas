@@ -23,7 +23,7 @@ class ReservationApiMapper
     }
 
     /**
-     * Convert Reservation entity to ReservationDTO
+     * Convertir entidad de reserva en ReservationDTO
      * @param Reservation $r
      * @return ReservationDTO
      */
@@ -33,16 +33,16 @@ class ReservationApiMapper
     }
 
     /**
-     * Convert Reservation entity directly to API array including nested user and room
+     * Convierte la entidad de reserva directamente en una matriz API que incluye usuarios y habitaciones anidados
      * @param Reservation $r
      * @return array
      */
     public function toArray(Reservation $r): array
     {
-        // Base reservation data
+        // Datos básicos de reserva
         $base = $this->toDTO($r)->toArray();
 
-        // Load user and room entities
+        // Cargar entidades de usuario y sala
         $userId = $r->getUserId();
         $roomId = $r->getRoomId();
 
@@ -70,7 +70,7 @@ class ReservationApiMapper
             ];
         }
 
-        // Build final structure per example: include only the requested fields
+        // Construir la estructura final según el ejemplo: incluir sólo los campos solicitados
         $result = [
             'id' => $base['id'],
             'status' => $base['status'],

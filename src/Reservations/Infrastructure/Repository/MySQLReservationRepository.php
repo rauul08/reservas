@@ -23,10 +23,10 @@ class MySQLReservationRepository implements ReservationRepository
 
     public function save(Reservation $reservation): Reservation
     {
-        // Map entity to row data
+        // Asignar entidad a datos de fila
         $row = $this->mapper->toRow($reservation);
 
-        // If id is present and > 0, include it in insert/update; otherwise insert and fetch lastInsertId
+        // Si id está presente y > 0, inclúyalo en insertar/actualizar; de lo contrario, inserte y obtenga lastInsertId
         if (!empty($row['id'])) {
             $sql = 'INSERT INTO reservations (id, user_id, room_id, check_in, check_out, total_price, status) VALUES (:id, :user_id, :room_id, :check_in, :check_out, :total_price, :status)'
                  . ' ON DUPLICATE KEY UPDATE user_id = VALUES(user_id), room_id = VALUES(room_id), check_in = VALUES(check_in), check_out = VALUES(check_out), total_price = VALUES(total_price), status = VALUES(status)';
@@ -36,7 +36,7 @@ class MySQLReservationRepository implements ReservationRepository
 
             $id = (int) $row['id'];
         } else {
-            // Insert without id (auto-increment)
+            // Insertar sin id (autoincremento)
             $sql = 'INSERT INTO reservations (user_id, room_id, check_in, check_out, total_price, status) VALUES (:user_id, :room_id, :check_in, :check_out, :total_price, :status)';
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute([
@@ -51,7 +51,7 @@ class MySQLReservationRepository implements ReservationRepository
             $id = (int) $this->pdo->lastInsertId();
         }
 
-        // Return the persisted entity (fetch from DB to include created_at)
+        // Devuelve la entidad persistente (obtenida de la base de datos para incluir created_at)
         $persisted = $this->findById($id);
         if ($persisted === null) {
             throw new \RuntimeException('Failed to fetch reservation after save');
@@ -99,7 +99,7 @@ class MySQLReservationRepository implements ReservationRepository
             $params['status'] = $criteria['status'];
         }
 
-        // Date range filtering: if both from/to provided, return reservations that overlap the range
+        // Filtrado de rango de fechas: si se proporcionan tanto desde como hasta, se devuelven las reservas que se superponen al rango
         if (!empty($criteria['from']) && !empty($criteria['to'])) {
             $where[] = 'NOT (check_out < :from OR check_in > :to)';
             $params['from'] = $criteria['from'];
@@ -124,7 +124,7 @@ class MySQLReservationRepository implements ReservationRepository
 
         $stmt = $this->pdo->prepare($sql);
 
-        // Bind params
+        // vincular parámetros
         foreach ($params as $k => $v) {
             $stmt->bindValue(':' . $k, $v);
         }
@@ -144,7 +144,7 @@ class MySQLReservationRepository implements ReservationRepository
 
     public function existsOverlappingReservation(int $roomId, string $checkIn, string $checkOut, ?int $excludeId = null): bool
     {
-        // Overlap condition: NOT (existing.check_out <= new.check_in OR existing.check_in >= new.check_out)
+        // Condición de superposición: NO (existente.check_out <= nuevo.check_in O existente.check_in >= nuevo.check_out)
         $sql = 'SELECT COUNT(*) as cnt FROM reservations WHERE room_id = :room_id AND NOT (check_out <= :check_in OR check_in >= :check_out)';
         $params = [
             'room_id' => $roomId,

@@ -8,21 +8,21 @@ use App\Reservations\Domain\Entities\Reservation;
 interface ReservationRepository
 {
     /**
-     * Persist a reservation
+     * Persistir en una reserva
      * @param Reservation $reservation
      */
     public function save(Reservation $reservation): Reservation;
 
     /**
-     * Find by id or return null
+     * Encontrar por id o devolver nula
      * @param int $id
      * @return Reservation|null
      */
     public function findById(int $id);
 
     /**
-     * Return reservations matching criteria with pagination
-     * @param array|null $criteria Supported keys: user_id, room_id, status, from, to
+     * Reservas de devolución que coincidan con los criterios de paginación
+     * @param array|null $criteria Claves admitidas: user_id, room_id, status, from, to
      * @param int $limit
      * @param int $offset
      * @return Reservation[]
@@ -30,15 +30,15 @@ interface ReservationRepository
     public function findAll(?array $criteria = null, int $limit = 10, int $offset = 0): array;
 
     /**
-     * Return total count matching criteria (for pagination)
+     * Devolver el recuento total de criterios coincidentes (para paginación)
      * @param array|null $criteria
      * @return int
      */
     public function countByCriteria(?array $criteria = null): int;
 
     /**
-     * Check if a room has any reservation overlapping the given range.
-     * Excludes an optional reservation id (useful when updating an existing reservation).
+     * Comprueba si una habitación tiene alguna reserva que se superponga al rango indicado.
+     * Excluye un ID de reserva opcional (útil al actualizar una reserva existente).
      * @param int $roomId
      * @param string $checkIn
      * @param string $checkOut
@@ -48,7 +48,7 @@ interface ReservationRepository
     public function existsOverlappingReservation(int $roomId, string $checkIn, string $checkOut, ?int $excludeId = null): bool;
 
     /**
-     * Cancel reservation by id
+     * Cancelar reserva por id
      * @param int $id
      */
     public function cancel(int $id): void;

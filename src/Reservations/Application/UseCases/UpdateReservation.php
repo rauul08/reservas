@@ -24,7 +24,7 @@ class UpdateReservation
     }
 
     /**
-     * Update reservation dates. Returns the updated Reservation.
+     * Actualizar fechas de reserva. Devuelve la reserva actualizada.
      * @param int $id
      * @param string $checkIn
      * @param string $checkOut
@@ -48,15 +48,15 @@ class UpdateReservation
             throw new \InvalidArgumentException('check_out must be greater than check_in');
         }
 
-        // Determine which room to check: optional new room_id provided, otherwise keep existing
+        // Determinar qué habitación verificar: se proporciona un nuevo room_id opcional, de lo contrario, conservar el existente
         $targetRoomId = $roomId ?? $existing->getRoomId();
 
-        // Check room availability excluding current reservation id
+        // Verificar la disponibilidad de la habitación excluyendo el ID de reserva actual
         if ($this->repository->existsOverlappingReservation($targetRoomId, $ci->toString(), $co->toString(), $id)) {
             throw new \InvalidArgumentException('Room is occupied in the requested date range');
         }
 
-        // Recalculate total price based on room price and number of nights
+        // Recalcular el precio total en función del precio de la habitación y el número de noches
         $room = $this->rooms->findById($targetRoomId);
         if ($room === null) {
             throw new \InvalidArgumentException(sprintf('Room with id "%d" not found', $targetRoomId));
@@ -66,7 +66,7 @@ class UpdateReservation
         $pricePerNight = $room->getPrice();
         $newTotal = $pricePerNight * $nights;
 
-        // Build updated reservation (keep other fields)
+        // Crear reserva actualizada (mantener otros campos)
         $updated = new Reservation(
             $existing->getId(),
             $ci,
