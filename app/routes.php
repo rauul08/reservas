@@ -48,4 +48,12 @@ return function (App $app) {
         $group->put('/{id}', \App\Rooms\Infrastructure\Controllers\UpdateRoomController::class);
         $group->delete('/{id}', \App\Rooms\Infrastructure\Controllers\DeleteRoomController::class);
     });
+
+    // Auth endpoints for Google OAuth
+    $app->group('/auth/google', function (Group $group) {
+        // Redirect to Google OAuth page
+        $group->get('', [\App\Auth\Infrastructure\Controllers\GoogleAuthController::class, 'redirectToGoogle']);
+        // Handle Google OAuth callback
+        $group->get('/callback', [\App\Auth\Infrastructure\Controllers\GoogleAuthController::class, 'handleCallback']);
+    });
 };

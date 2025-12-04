@@ -31,6 +31,17 @@ return function (ContainerBuilder $containerBuilder) {
                         \PDO::ATTR_EMULATE_PREPARES => false,
                     ],
                 ],
+                // Google OAuth configuration
+                'google_oauth' => [
+                    'client_id' => $_ENV['GOOGLE_CLIENT_ID'] ?? '',
+                    'client_secret' => $_ENV['GOOGLE_CLIENT_SECRET'] ?? '',
+                    'redirect_uri' => $_ENV['GOOGLE_REDIRECT_URI'] ?? 'http://localhost/reservademo/public/frontend/auth-callback.html',
+                ],
+                // JWT configuration
+                'jwt' => [
+                    'secret' => $_ENV['JWT_SECRET'] ?? 'your-secret-key-change-in-production-' . bin2hex(random_bytes(16)),
+                    'expiration' => 86400, // 24 hours
+                ],
             ]);
         }
     ]);

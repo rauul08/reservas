@@ -13,15 +13,27 @@ class User
     protected $email;
     protected $phone;
     protected $createdAt;
+    protected $googleId;
+    protected $pictureUrl;
 
-    public function __construct(int $id, string $firstName, string $lastName, string $email, ?string $phone, DateTimeImmutable $createdAt)
-    {
+    public function __construct(
+        int $id, 
+        string $firstName, 
+        string $lastName, 
+        string $email, 
+        ?string $phone, 
+        DateTimeImmutable $createdAt,
+        ?string $googleId = null,
+        ?string $pictureUrl = null
+    ) {
         $this->id = $id;
         $this->firstName = $firstName;
         $this->lastName = $lastName;
         $this->email = $email;
         $this->phone = $phone;
         $this->createdAt = $createdAt;
+        $this->googleId = $googleId;
+        $this->pictureUrl = $pictureUrl;
     }
 
     public function getId(): int
@@ -52,5 +64,15 @@ class User
     public function getCreatedAt(): DateTimeImmutable
     {
         return $this->createdAt;
+    }
+
+    public function getGoogleId(): ?string
+    {
+        return $this->googleId;
+    }
+
+    public function getPictureUrl(): ?string
+    {
+        return $this->pictureUrl;
     }
 }
