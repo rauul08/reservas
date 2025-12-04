@@ -18,8 +18,8 @@ class MySQLUserRepository implements UserRepository
 
     public function save(User $user): void
     {
-        $stmt = $this->pdo->prepare('INSERT INTO users (id, first_name, last_name, email, phone) VALUES (:id, :first_name, :last_name, :email, :phone)'
-            . ' ON DUPLICATE KEY UPDATE first_name = VALUES(first_name), last_name = VALUES(last_name), email = VALUES(email), phone = VALUES(phone)');
+        $stmt = $this->pdo->prepare('INSERT INTO users (id, first_name, last_name, email, phone, google_id, picture_url) VALUES (:id, :first_name, :last_name, :email, :phone, :google_id, :picture_url)'
+            . ' ON DUPLICATE KEY UPDATE first_name = VALUES(first_name), last_name = VALUES(last_name), email = VALUES(email), phone = VALUES(phone), google_id = VALUES(google_id), picture_url = VALUES(picture_url)');
 
         $stmt->execute([
             'id' => $user->getId(),
@@ -27,6 +27,8 @@ class MySQLUserRepository implements UserRepository
             'last_name' => $user->getLastName(),
             'email' => $user->getEmail(),
             'phone' => $user->getPhone(),
+            'google_id' => $user->getGoogleId(),
+            'picture_url' => $user->getPictureUrl(),
         ]);
     }
 
@@ -45,7 +47,9 @@ class MySQLUserRepository implements UserRepository
             $row['last_name'],
             $row['email'],
             $row['phone'] ?? null,
-            isset($row['created_at']) ? new \DateTimeImmutable($row['created_at']) : new \DateTimeImmutable()
+            isset($row['created_at']) ? new \DateTimeImmutable($row['created_at']) : new \DateTimeImmutable(),
+            $row['google_id'] ?? null,
+            $row['picture_url'] ?? null
         );
     }
 }

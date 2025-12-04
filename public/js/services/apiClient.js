@@ -17,6 +17,13 @@ function buildUrl(path, params, baseOverride) {
 
 export async function request(path, { method = 'GET', body = null, params = null, headers = {} } = {}, _retryWithIndexPhp = false) {
     const url = buildUrl(path, params);
+    
+    // Add JWT token if available
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
+    
     const opts = { method, headers: { Accept: 'application/json', ...headers } };
     if (body != null) {
         opts.headers['Content-Type'] = 'application/json';

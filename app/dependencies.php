@@ -105,5 +105,44 @@ return function (ContainerBuilder $containerBuilder) {
                 $c->get(ReservationRepositoryInterface::class)
             );
         },
+
+        // Auth services
+        \App\Auth\Domain\Repositories\UserRepository::class => function (ContainerInterface $c) {
+            return new \App\Auth\Infrastructure\Persistence\MySQLUserRepository($c->get(\PDO::class));
+        },
+
+        \App\Auth\Infrastructure\Services\GoogleOAuthService::class => function (ContainerInterface $c) {
+            $settings = $c->get(SettingsInterface::class);
+            $oauth = $settings->get('google_oauth');
+            return new \App\Auth\Infrastructure\Services\GoogleOAuthService(
+                $oauth['client_id'],
+                $oauth['client_secret'],
+                $oauth['redirect_uri']
+            );
+        },
+
+        \App\Auth\Infrastructure\Services\JwtService::class => function (ContainerInterface $c) {
+            $settings = $c->get(SettingsInterface::class);
+            $jwt = $settings->get('jwt');
+            return new \App\Auth\Infrastructure\Services\JwtService(
+                $jwt['secret'],
+                $jwt['expiration']
+            );
+        },
+
+        \App\Auth\Application\UseCases\LoginWithGoogle::class => function (ContainerInterface $c) {
+            return new \App\Auth\Application\UseCases\LoginWithGoogle(
+                $c->get(\App\Auth\Domain\Repositories\UserRepository::class),
+                $c->get(\App\Auth\Infrastructure\Services\GoogleOAuthService::class),
+                $c->get(\App\Auth\Infrastructure\Services\JwtService::class)
+            );
+        },
+
+        \App\Auth\Infrastructure\Controllers\GoogleAuthController::class => function (ContainerInterface $c) {
+            return new \App\Auth\Infrastructure\Controllers\GoogleAuthController(
+                $c->get(\App\Auth\Infrastructure\Services\GoogleOAuthService::class),
+                $c->get(\App\Auth\Application\UseCases\LoginWithGoogle::class)
+            );
+        },
     ]);
 };

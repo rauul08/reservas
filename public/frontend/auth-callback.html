@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autenticando...</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .loader-container {
+            text-align: center;
+            background: white;
+            padding: 3rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        h2 {
+            margin: 0 0 0.5rem;
+            color: #333;
+        }
+        p {
+            color: #666;
+            margin: 0;
+        }
+        .error {
+            color: #e74c3c;
+            margin-top: 1rem;
+        }
+        .success {
+            color: #27ae60;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="loader-container">
+        <div class="loader"></div>
+        <h2>Autenticando con Google</h2>
+        <p id="status">Por favor espera...</p>
+    </div>
+
+    <script>
+        // Define API_BASE for this page
+        window.API_BASE = 'http://localhost/reservademo/public';
+    </script>
+    
+    <script type="module">
+        import * as authService from '../js/services/authService.js';
+
+        async function handleCallback() {
+            const statusEl = document.getElementById('status');
+            
+            // Debug logging
+            const params = new URLSearchParams(window.location.search);
+            const code = params.get('code');
+            const error = params.get('error');
+            
+            console.log('OAuth Callback Debug:', {
+                url: window.location.href,
+                code: code ? 'present' : 'missing',
+                error: error || 'none',
+                API_BASE: window.API_BASE
+            });
+            
+            // Store debug info
+            localStorage.setItem('oauth_debug', JSON.stringify({
+                url: window.location.href,
+                code: code ? code.substring(0, 20) + '...' : 'missing',
+                error: error,
+                timestamp: new Date().toISOString()
+            }));
+            
+            try {
+                const result = await authService.handleOAuthCallback();
+                
+                console.log('OAuth result:', result);
+                
+                if (result.success) {
+                    statusEl.textContent = '✓ Autenticación exitosa. Redirigiendo...';
+                    statusEl.className = 'success';
+                    localStorage.removeItem('oauth_debug');
+                    
+                    // Redirect to home page after 1 second
+                    setTimeout(() => {
+                        window.location.href = './index.html';
+                    }, 1000);
+                } else {
+                    statusEl.textContent = '✗ Error: ' + (result.error || 'Autenticación fallida');
+                    statusEl.className = 'error';
+                    
+                    // Store error for inspection
+                    localStorage.setItem('oauth_error', JSON.stringify({
+                        error: result.error,
+                        timestamp: new Date().toISOString()
+                    }));
+                    
+                    // Redirect back to login after 5 seconds to allow reading error
+                    setTimeout(() => {
+                        window.location.href = './index.html';
+                    }, 5000);
+                }
+            } catch (err) {
+                console.error('Callback error:', err);
+                statusEl.textContent = '✗ Error inesperado: ' + err.message;
+                statusEl.className = 'error';
+                
+                // Store error for inspection
+                localStorage.setItem('oauth_error', JSON.stringify({
+                    error: err.message,
+                    stack: err.stack,
+                    timestamp: new Date().toISOString()
+                }));
+                
+                setTimeout(() => {
+                    window.location.href = './index.html';
+                }, 5000);
+            }
+        }
+
+        // Execute callback handler
+        handleCallback();
+    </script>
+</body>
+</html>

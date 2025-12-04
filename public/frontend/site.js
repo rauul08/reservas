@@ -2,6 +2,7 @@
 import * as roomsSvc from '../js/services/roomsService.js';
 import * as usersSvc from '../js/services/usersService.js';
 import * as reservationsSvc from '../js/services/reservationsService.js';
+import * as authSvc from '../js/services/authService.js';
 
 // Derive an API base path when not provided by the page.
 // Example: if the page is served at /reservademo/public/frontend/..., base becomes /reservademo/public
@@ -15,6 +16,55 @@ if (!window.API_BASE) {
 }
 // Debug: print detected API base for troubleshooting
 try { console.debug('Detected API_BASE =', window.API_BASE); } catch(e) {}
+
+function renderAuthUI() {
+  const authButtonsEl = document.getElementById('authButtons');
+  if (!authButtonsEl) return;
+
+  if (authSvc.isAuthenticated()) {
+    const user = authSvc.getUser();
+    console.log('Rendering auth UI for user:', user); // Debug
+    
+    // Ensure we have user data
+    if (!user) {
+      console.error('User is authenticated but no user data found');
+      authSvc.clearAuth();
+      location.reload();
+      return;
+    }
+    
+    const displayName = user.name || user.email || 'Usuario';
+    const userPicture = user.picture || user.picture_url || '';
+    
+    authButtonsEl.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        ${userPicture ? `<img src="${userPicture}" alt="${displayName}" style="width: 32px; height: 32px; border-radius: 50%;" onerror="this.style.display='none'" />` : ''}
+        <span style="color: black; font-weight: 500;">${displayName}</span>
+        <button class="btn-login" onclick="logout()">Cerrar Sesión</button>
+      </div>
+    `;
+  } else {
+    authButtonsEl.innerHTML = `
+      <button class="btn-login" onclick="loginWithGoogle()">
+        <svg style="width: 18px; height: 18px; margin-right: 8px; display: inline-block; vertical-align: middle;" viewBox="0 0 24 24">
+          <path fill="currentColor" d="M21.35,11.1H12.18V13.83H18.69C18.36,17.64 15.19,19.27 12.19,19.27C8.36,19.27 5,16.25 5,12C5,7.9 8.2,4.73 12.2,4.73C15.29,4.73 17.1,6.7 17.1,6.7L19,4.72C19,4.72 16.56,2 12.1,2C6.42,2 2.03,6.8 2.03,12C2.03,17.05 6.16,22 12.25,22C17.6,22 21.5,18.33 21.5,12.91C21.5,11.76 21.35,11.1 21.35,11.1V11.1Z" />
+        </svg>
+        Iniciar con Google
+      </button>
+    `;
+  }
+}
+
+// Make functions globally available
+window.loginWithGoogle = function() {
+  authSvc.loginWithGoogle();
+};
+
+window.logout = function() {
+  if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+    authSvc.logout();
+  }
+};
 
 function setDefaultDates() {
   try {
@@ -213,12 +263,12 @@ function renderRooms(rooms) {
         imgEl.src = resolved;
       }
 
-      // update reserve button to pass subtype/category and current price
+      // update reserve button to pass room_id, subtype/category and current price
       const btn = card.querySelector('.btn-reserve');
       if (btn) {
         // prefer subtype for the visible type; fallback to category
         const subtypeSafe = String(type).replace(/'/g, "\\'");
-        btn.setAttribute('onclick', `reserveRoom('${subtypeSafe}', ${price})`);
+        btn.setAttribute('onclick', `reserveRoom(${id}, '${subtypeSafe}', ${price})`);
       }
 
       // keep title, room-rating and room-amenities as they are in the static HTML
@@ -269,7 +319,7 @@ function renderRooms(rooms) {
                 <span class="price-label">Precio por noche</span>
                 <div class="price">$${price.toLocaleString()} <span>MXN</span></div>
               </div>
-              <button class="btn-reserve" onclick="reserveRoom('${type}', ${price})">Ver Detalles</button>
+              <button class="btn-reserve" onclick="reserveRoom(${id}, '${type}', ${price})">Ver Detalles</button>
             </div>
           </div>
         `;
@@ -367,54 +417,79 @@ function searchRooms() {
   })();
 }
 
-function reserveRoom(tipo, precio) {
+function reserveRoom(roomId, tipo, precio) {
+  // Check if user is authenticated
+  if (!authSvc.isAuthenticated()) {
+    const shouldLogin = confirm('Debes iniciar sesión para hacer una reserva.\n\n¿Deseas iniciar sesión con Google ahora?');
+    if (shouldLogin) {
+      authSvc.loginWithGoogle();
+    }
+    return;
+  }
+
+  // Get authenticated user
+  const user = authSvc.getUser();
+  if (!user || !user.id) {
+    alert('Error: No se pudo obtener la información del usuario. Por favor, vuelve a iniciar sesión.');
+    authSvc.clearAuth();
+    return;
+  }
+
+  // Validate dates
   const checkin = document.getElementById('checkin')?.value;
   const checkout = document.getElementById('checkout')?.value;
   if (!checkin || !checkout) {
     alert('Por favor selecciona tus fechas de viaje antes de continuar');
     return;
   }
+
   const days = Math.ceil((new Date(checkout) - new Date(checkin)) / (1000 * 60 * 60 * 24));
   const total = precio * days;
 
-  // keep old UX but offer optional quick-create for developers
-  const proceed = confirm(`Habitación: ${tipo.toUpperCase()}\nPrecio por noche: $${precio} MXN\nNoches: ${days}\nTotal: $${total} MXN\n\n¿Quieres intentar crear la reserva automáticamente?`);
-  if (!proceed) {
-    alert('Para continuar con la reserva, inicia sesión o regístrate.');
-    return;
-  }
+  // Confirm reservation details
+  const proceed = confirm(
+    `Habitación: ${tipo.toUpperCase()}\n` +
+    `Precio por noche: $${precio.toLocaleString()} MXN\n` +
+    `Noches: ${days}\n` +
+    `Total: $${total.toLocaleString()} MXN\n\n` +
+    `Usuario: ${user.name || user.email}\n\n` +
+    `¿Confirmar reserva?`
+  );
+  
+  if (!proceed) return;
 
-  // ask for a user id (simple prompt, non-intrusive). If user cancels or input invalid, abort.
-  const uid = prompt('Ingresa tu user_id (número) para demo de creación automática (o cancela):');
-  const userId = uid ? Number(uid) : NaN;
-  if (!userId || Number.isNaN(userId) || userId <= 0) {
-    alert('ID de usuario inválido o cancelado. La reserva no fue creada.');
-    return;
-  }
-
-  // try to create reservation via service
+  // Create reservation with authenticated user and selected room
   if (reservationsSvc && typeof reservationsSvc.createReservation === 'function') {
     reservationsSvc.createReservation({
-      user_id: userId,
-      room_id: 1, // best-effort: UI does not assign numeric ids; developer can adjust
+      user_id: user.id,
+      room_id: Number(roomId),
       check_in: new Date(checkin).toISOString(),
       check_out: new Date(checkout).toISOString()
     }).then(res => {
-      alert('Reserva creada: #' + res.id + '\nVer consola para respuesta completa.');
-      console.info('createReservation response', res);
+      alert(
+        `¡Reserva creada exitosamente! 🎉\n\n` +
+        `Número de reserva: #${res.id}\n` +
+        `Habitación: ${tipo}\n` +
+        `Check-in: ${checkin}\n` +
+        `Check-out: ${checkout}\n` +
+        `Total: $${total.toLocaleString()} MXN`
+      );
+      console.info('Reservation created:', res);
     }).catch(err => {
-      console.error('createReservation error', err);
-      alert('Error al crear la reserva: ' + (err.message || JSON.stringify(err)));
+      console.error('createReservation error:', err);
+      alert('Error al crear la reserva: ' + (err.message || 'Error desconocido. Ver consola para más detalles.'));
     });
-    return;
+  } else {
+    alert('Error: El servicio de reservas no está disponible.');
   }
-
-  alert('Para continuar con la reserva, inicia sesión o regístrate.');
 }
 
 // Initialize UI on DOM ready: set defaults, populate destinations, capture original static HTML and load rooms
 document.addEventListener('DOMContentLoaded', async () => {
   try {
+    // Render auth UI first
+    renderAuthUI();
+    
     setDefaultDates();
 
     // capture original static markup so we can restore it when needed
