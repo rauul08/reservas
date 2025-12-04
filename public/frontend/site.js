@@ -130,6 +130,18 @@ function renderRooms(rooms) {
   // Find existing static cards so we preserve title, rating and amenities as requested
   const staticCards = Array.from(container.querySelectorAll('.room-card'));
 
+  function formatRating(rating) {
+    if (rating === null || rating === undefined || rating === '') return 'N/A';
+    const num = Number(rating);
+    if (Number.isNaN(num)) return String(rating);
+    // create simple star visual (rounded to nearest integer)
+    const rounded = Math.round(num);
+    const full = Math.max(0, Math.min(5, rounded));
+    const empty = 5 - full;
+    const stars = '★'.repeat(full) + '☆'.repeat(empty);
+    return `${stars} ${num}`;
+  }
+
   // Update existing static cards with DB data where possible
   for (let i = 0; i < rooms.length; i++) {
     const r = rooms[i];
@@ -155,26 +167,31 @@ function renderRooms(rooms) {
         priceEl.innerHTML = `$${price.toLocaleString()} <span>MXN</span>`;
       }
 
-      // update title if API provides a more specific value (subtype/category or title)
+      // update title if API provides a more specific value (prefer explicit title)
       const titleEl = card.querySelector('.room-title h3');
       const apiTitle = r.title || r.name || r.subtype || r.category || null;
       if (titleEl && apiTitle) {
-        titleEl.textContent = String(apiTitle);
+        // capitalize first letter when falling back to subtype/category
+        const out = (r.title ? String(apiTitle) : String(apiTitle)).toString();
+        titleEl.textContent = out.charAt(0).toUpperCase() + out.slice(1);
       }
 
       // update rating if provided by API (keep static if not)
       const ratingEl = card.querySelector('.room-rating');
-      if (ratingEl && (r.rating || r.rating === 0)) {
-        // accept numeric or string rating
-        ratingEl.textContent = String(r.rating);
+      if (ratingEl) {
+        if (r.rating || r.rating === 0) {
+          ratingEl.innerHTML = formatRating(r.rating);
+        }
       }
 
       // update amenities if API returns them (comma-separated or array)
       const amenitiesEl = card.querySelector('.room-amenities');
-      if (amenitiesEl && r.amenities) {
+      if (amenitiesEl) {
         let items = [];
-        if (Array.isArray(r.amenities)) items = r.amenities;
-        else if (typeof r.amenities === 'string') items = r.amenities.split(',').map(s => s.trim()).filter(Boolean);
+        if (r.amenities) {
+          if (Array.isArray(r.amenities)) items = r.amenities;
+          else if (typeof r.amenities === 'string') items = r.amenities.split(',').map(s => s.trim()).filter(Boolean);
+        }
         if (items.length) {
           amenitiesEl.innerHTML = items.map(it => `<span class="amenity">${it}</span>`).join(' ');
         }
@@ -211,38 +228,51 @@ function renderRooms(rooms) {
       div.className = 'room-card show';
       div.setAttribute('data-type', type);
       div.setAttribute('data-id', id);
-      const titleText = (r.subtype || r.category || 'Habitación').toString();
-      const safeTitle = titleText.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      const safeDesc = desc.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      const dynamicImg = r.image_url ? (String(r.image_url).startsWith('/') ? (window.API_BASE.replace(/\/$/, '') + r.image_url) : r.image_url) : ('https://source.unsplash.com/featured/?hotel,room,' + encodeURIComponent(type));
-      div.innerHTML = `
-        <div class="room-image-container">
-          <img src="${dynamicImg}" alt="${safeTitle}" class="room-image">
-        </div>
-        <div class="room-details">
-          <div>
-            <div class="room-header">
-              <div class="room-title">
-                <h3>${safeTitle}</h3>
-                <div class="room-rating">★★★★☆ 4.5 (N/A)</div>
+        // prefer explicit room title; fallback to subtype/category with capitalization
+        const titleText = (r.title || r.subtype || r.category || 'Habitación').toString();
+        const safeTitle = titleText.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const safeDesc = desc.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const dynamicImg = r.image_url ? (String(r.image_url).startsWith('/') ? (window.API_BASE.replace(/\/$/, '') + r.image_url) : r.image_url) : ('https://source.unsplash.com/featured/?hotel,room,' + encodeURIComponent(type));
+        // build amenities HTML
+        let amenHTML = '';
+        if (r.amenities) {
+          let items = [];
+          if (Array.isArray(r.amenities)) items = r.amenities;
+          else if (typeof r.amenities === 'string') items = r.amenities.split(',').map(s => s.trim()).filter(Boolean);
+          amenHTML = items.map(it => `<span class="amenity">${it}</span>`).join(' ');
+        } else {
+          amenHTML = `<span class="amenity">📶 WiFi Gratis</span> <span class="amenity">🚿 Baño Privado</span> <span class="amenity">📺 TV</span>`;
+        }
+
+        const ratingHTML = (r.rating || r.rating === 0) ? `<div class="room-rating">${formatRating(r.rating)}</div>` : `<div class="room-rating">N/A</div>`;
+
+        div.innerHTML = `
+          <div class="room-image-container">
+            <img src="${dynamicImg}" alt="${safeTitle}" class="room-image">
+            
+          </div>
+          <div class="room-details">
+            <div>
+              <div class="room-header">
+                <div class="room-title">
+                  <h3>${safeTitle.charAt(0).toUpperCase() + safeTitle.slice(1)}</h3>
+                  ${ratingHTML}
+                </div>
+              </div>
+              <p class="room-description">${safeDesc}</p>
+              <div class="room-amenities">
+                ${amenHTML}
               </div>
             </div>
-            <p class="room-description">${safeDesc}</p>
-            <div class="room-amenities">
-              <span class="amenity">📶 WiFi Gratis</span>
-              <span class="amenity">🚿 Baño Privado</span>
-              <span class="amenity">📺 TV</span>
+            <div class="room-footer">
+              <div class="price-info">
+                <span class="price-label">Precio por noche</span>
+                <div class="price">$${price.toLocaleString()} <span>MXN</span></div>
+              </div>
+              <button class="btn-reserve" onclick="reserveRoom('${type}', ${price})">Ver Detalles</button>
             </div>
           </div>
-          <div class="room-footer">
-            <div class="price-info">
-              <span class="price-label">Precio por noche</span>
-              <div class="price">$${price.toLocaleString()} <span>MXN</span></div>
-            </div>
-            <button class="btn-reserve" onclick="reserveRoom('${type}', ${price})">Ver Detalles</button>
-          </div>
-        </div>
-      `;
+        `;
       container.appendChild(div);
     }
   }
@@ -312,30 +342,14 @@ function searchRooms() {
     }
 
     try {
-      // fetch rooms for destination
-      const resp = await roomsSvc.listRooms({ destination: destination, per_page: 200 });
-      const rooms = (resp && resp.data) ? resp.data : [];
+      // call server-side availability endpoint (handles capacity and overlapping reservations)
+      const fromIso = checkin; // server expects YYYY-MM-DD
+      const toIso = checkout;
+      const resp = await roomsSvc.listAvailable({ destination: destination, from: fromIso, to: toIso, guests: guests, per_page: 200 });
+      const available = (resp && resp.data) ? resp.data : [];
 
-      // filter by capacity
-      const candidateRooms = rooms.filter(r => (Number(r.capacity) >= guests));
-
-      if (!candidateRooms.length) {
-        alert('No hay habitaciones aptas para el número de huéspedes en ese destino');
-        return;
-      }
-
-      // check availability in parallel
-      const fromIso = new Date(checkin).toISOString();
-      const toIso = new Date(checkout).toISOString();
-      const checks = await Promise.all(candidateRooms.map(async (room) => {
-        const ok = await isRoomAvailable(room.id, fromIso, toIso);
-        return ok ? room : null;
-      }));
-
-      const available = checks.filter(Boolean);
       if (!available.length) {
         alert('Lo siento, no hay habitaciones disponibles para las fechas seleccionadas en este destino');
-        // render none: clear list
         const container = document.querySelector('.rooms-list');
         if (container) container.innerHTML = '<p>No hay habitaciones disponibles para esas fechas.</p>';
         return;
@@ -397,6 +411,25 @@ function reserveRoom(tipo, precio) {
 
   alert('Para continuar con la reserva, inicia sesión o regístrate.');
 }
+
+// Initialize UI on DOM ready: set defaults, populate destinations, capture original static HTML and load rooms
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    setDefaultDates();
+
+    // capture original static markup so we can restore it when needed
+    const container = document.querySelector('.rooms-list');
+    if (container) {
+      originalRoomsHTML = container.innerHTML;
+    }
+
+    // populate destinations select and initial rooms
+    await populateDestinations();
+    await loadRooms(null);
+  } catch (e) {
+    console.debug('init error', e);
+  }
+});
 
 function goToLogin() { alert('Redirigiendo al inicio de sesión...'); }
 function goToRegister() { alert('Redirigiendo al registro...'); }
