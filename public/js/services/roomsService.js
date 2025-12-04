@@ -4,6 +4,10 @@ export async function listRooms(params = {}) {
     return await request('/rooms', { method: 'GET', params });
 }
 
+export async function listAvailable(params = {}) {
+    return await request('/rooms/available', { method: 'GET', params });
+}
+
 export async function getRoom(id) {
     return await request(`/rooms/${id}`, { method: 'GET' });
 }

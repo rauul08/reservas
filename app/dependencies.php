@@ -99,5 +99,11 @@ return function (ContainerBuilder $containerBuilder) {
                 $c->get(ReservationRepositoryInterface::class)
             );
         },
+        \App\Rooms\Infrastructure\Controllers\AvailableRoomsController::class => function (ContainerInterface $c) {
+            return new \App\Rooms\Infrastructure\Controllers\AvailableRoomsController(
+                $c->get(RoomRepositoryInterface::class),
+                $c->get(ReservationRepositoryInterface::class)
+            );
+        },
     ]);
 };
